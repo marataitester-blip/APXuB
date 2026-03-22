@@ -1,16 +1,14 @@
 import { FolderArchive, Download, Search, Terminal } from 'lucide-react';
 import { getProjects } from './actions';
+import Link from 'next/link';
 
-// Запрещаем кэшировать эту страницу, чтобы всегда видеть свежие данные из базы
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // Получаем реальные данные из базы
   const projects = await getProjects();
 
   return (
     <main className="flex-1 p-6 md:p-12 max-w-5xl mx-auto w-full">
-      {/* Шапка */}
       <header className="flex justify-between items-center mb-12 border-b border-gold/20 pb-6">
         <div>
           <h1 className="text-4xl md:text-5xl font-light text-gold tracking-wide">APXuB</h1>
@@ -21,9 +19,9 @@ export default async function Home() {
         </button>
       </header>
 
-      {/* Блок главных действий */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <button className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group">
+        {/* Обернули кнопку в Link */}
+        <Link href="/new" className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group cursor-pointer block">
           <div className="p-4 bg-gold/10 rounded-full group-hover:bg-gold/20 transition-colors">
             <FolderArchive className="w-8 h-8 text-gold" />
           </div>
@@ -31,7 +29,7 @@ export default async function Home() {
             <h2 className="text-xl font-light text-gold mb-1">Добавить проект</h2>
             <p className="text-sm font-light text-gray-400">Сгенерировать техпаспорт из GitHub</p>
           </div>
-        </button>
+        </Link>
 
         <button className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group">
           <div className="p-4 bg-gold/10 rounded-full group-hover:bg-gold/20 transition-colors">
@@ -44,14 +42,12 @@ export default async function Home() {
         </button>
       </section>
 
-      {/* Витрина проектов */}
       <section>
         <h2 className="text-2xl font-light text-gold-light mb-6 flex items-center gap-2">
           <Terminal className="w-5 h-5" />
           Моя библиотека
         </h2>
         
-        {/* Проверка: если проектов нет, показываем красивое сообщение */}
         {projects.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-gold/30 rounded-xl text-gold/50 font-light bg-[#111]">
             Библиотека пока пуста. Добавьте свой первый проект.
