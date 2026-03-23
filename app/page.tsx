@@ -30,15 +30,16 @@ export default async function Home() {
           </div>
         </Link>
 
-        <button className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group">
+        {/* Кнопка резервной копии переделана под скачивание файла */}
+        <a href="/api/backup" download="arxub_backup.json" className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group cursor-pointer block">
           <div className="p-4 bg-gold/10 rounded-full group-hover:bg-gold/20 transition-colors">
             <Download className="w-8 h-8 text-gold" />
           </div>
           <div>
             <h2 className="text-xl font-light text-gold mb-1">Резервная копия</h2>
-            <p className="text-sm font-light text-gray-400">Скачать ZIP-архивы на компьютер</p>
+            <p className="text-sm font-light text-gray-400">Скачать базу хаба (JSON)</p>
           </div>
-        </button>
+        </a>
       </section>
 
       <section>
