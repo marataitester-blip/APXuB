@@ -1,7 +1,6 @@
 import './globals.css';
 import { Montserrat } from 'next/font/google';
 
-// Тонкий, изящный шрифт для премиального вида
 const montserrat = Montserrat({ 
   subsets: ['cyrillic', 'latin'], 
   weight: ['300', '400', '500'] 
@@ -11,6 +10,12 @@ export const metadata = {
   title: 'APXuB | Мои проекты',
   description: 'Библиотека проектов и генератор техпаспортов',
   themeColor: '#0a0a0a',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'APXuB',
+  },
 };
 
 export default function RootLayout({
