@@ -17,6 +17,19 @@ export async function getProjects() {
   }
 }
 
+// Получение одного проекта по ID
+export async function getProjectById(id: string) {
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id }
+    })
+    return project
+  } catch (error) {
+    console.error("Ошибка при получении проекта:", error)
+    return null
+  }
+}
+
 // Создание нового проекта
 export async function createProject(formData: FormData) {
   const name = formData.get('name') as string;
@@ -24,7 +37,7 @@ export async function createProject(formData: FormData) {
   const repoUrl = formData.get('repoUrl') as string;
   const appUrl = formData.get('appUrl') as string;
 
-  if (!name) return; // Название обязательно
+  if (!name) return;
 
   await prisma.project.create({
     data: {
@@ -35,7 +48,6 @@ export async function createProject(formData: FormData) {
     }
   });
 
-  // Обновляем главную страницу и возвращаем пользователя на нее
   revalidatePath('/');
   redirect('/');
 }
