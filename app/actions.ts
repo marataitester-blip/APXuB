@@ -7,10 +7,9 @@ import { scanRepoAndGeneratePassport } from '../lib/scanner'
 
 export async function getProjects() {
   try {
-    const projects = await prisma.project.findMany({
+    return await prisma.project.findMany({
       orderBy: { createdAt: 'desc' }
     })
-    return projects
   } catch (error) {
     console.error("Ошибка при получении проектов:", error)
     return []
@@ -19,10 +18,9 @@ export async function getProjects() {
 
 export async function getProjectById(id: string) {
   try {
-    const project = await prisma.project.findUnique({
+    return await prisma.project.findUnique({
       where: { id }
     })
-    return project
   } catch (error) {
     console.error("Ошибка при получении проекта:", error)
     return null
@@ -50,7 +48,6 @@ export async function createProject(formData: FormData) {
   redirect('/');
 }
 
-// Новая функция: генерация и сохранение техпаспорта
 export async function generatePassportAction(formData: FormData) {
   const projectId = formData.get('projectId') as string;
   
@@ -64,18 +61,33 @@ export async function generatePassportAction(formData: FormData) {
   }
 
   try {
-    // Вызываем наш ИИ-сканер
     const generatedText = await scanRepoAndGeneratePassport(project.repoUrl);
 
-    // Сохраняем результат в базу данных
     await prisma.project.update({
       where: { id: projectId },
       data: { techPassport: generatedText }
     });
 
-    // Обновляем кэш страницы, чтобы сразу показать результат
     revalidatePath(`/project/${projectId}`);
   } catch (error) {
     console.error("Ошибка при генерации:", error);
   }
+}
+
+// Новая функция: Удаление проекта
+export async function deleteProject(formData: FormData) {
+  const projectId = formData.get('projectId') as string;
+  
+  if (!projectId) return;
+
+  try {
+    await prisma.project.delete({
+      where: { id: projectId }
+    });
+  } catch (error) {
+    console.error("Ошибка при удалении проекта:", error);
+  }
+
+  revalidatePath('/');
+  redirect('/');
 }
