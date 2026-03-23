@@ -1,7 +1,8 @@
-import { ArrowLeft, Github, Globe, FileText, Activity } from 'lucide-react';
+import { ArrowLeft, Github, Globe, FileText, Activity, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { getProjectById, generatePassportAction } from '../../actions';
+import { getProjectById, generatePassportAction, deleteProject } from '../../actions';
 import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const project = await getProjectById(params.id);
@@ -19,7 +20,16 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         </Link>
         <div className="flex justify-between items-start gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl md:text-5xl font-light text-gold tracking-wide">{project.name}</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-4xl md:text-5xl font-light text-gold tracking-wide">{project.name}</h1>
+              {/* Кнопка удаления */}
+              <form action={deleteProject}>
+                <input type="hidden" name="projectId" value={project.id} />
+                <button type="submit" className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" title="Удалить проект">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </form>
+            </div>
             <p className="text-lg mt-4 text-gray-300 font-light max-w-2xl">{project.description || 'Описание отсутствует'}</p>
           </div>
           
@@ -47,7 +57,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
             Технический паспорт
           </h2>
           
-          {/* Форма генерации */}
           {project.repoUrl && (
             <form action={generatePassportAction}>
               <input type="hidden" name="projectId" value={project.id} />
@@ -56,7 +65,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
                 className="flex items-center gap-2 text-sm text-[#0a0a0a] bg-gold px-4 py-2 rounded-lg font-medium hover:bg-gold-light transition-colors"
               >
                 <Activity className="w-4 h-4" />
-                Сгенерировать
+                Обновить паспорт
               </button>
             </form>
           )}
@@ -64,8 +73,22 @@ export default async function ProjectPage({ params }: { params: { id: string } }
 
         <div className="font-light text-gray-300 leading-relaxed">
           {project.techPassport ? (
-            <div className="whitespace-pre-wrap prose prose-invert prose-gold max-w-none">
-              {project.techPassport}
+            <div className="markdown-container space-y-4">
+              {/* Рендерим Markdown в нормальный HTML */}
+              <ReactMarkdown
+                components={{
+                  h1: ({node, ...props}) => <h1 className="text-2xl font-medium text-gold mt-6 mb-3" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-xl font-medium text-gold-light mt-5 mb-2" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-lg font-medium text-gold-light/80 mt-4 mb-2" {...props} />,
+                  p: ({node, ...props}) => <p className="mb-3 leading-relaxed" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-1" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-1" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-medium text-gold-light" {...props} />,
+                  code: ({node, ...props}) => <code className="bg-[#0a0a0a] text-gold/80 px-1.5 py-0.5 rounded text-sm font-mono border border-gold/10" {...props} />,
+                }}
+              >
+                {project.techPassport}
+              </ReactMarkdown>
             </div>
           ) : (
             <div className="text-center py-12 text-gold/40">
