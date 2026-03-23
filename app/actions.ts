@@ -84,7 +84,7 @@ export async function authenticateAction(prevState: any, formData: FormData) {
       httpOnly: true, // Защита от XSS атак
       secure: true,   // Только через HTTPS
       sameSite: 'strict', // Защита от CSRF
-      maxAge: 60 * 60 * 24 * 30, // 3 минуты
+      maxAge: 60 * 01 * 00 * 00, // 1 минута
       path: '/',
     });
     redirect('/'); // Успех -> на главную
