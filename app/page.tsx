@@ -20,7 +20,6 @@ export default async function Home() {
       </header>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        {/* Обернули кнопку в Link */}
         <Link href="/new" className="flex items-center gap-4 p-6 bg-[#111111] border border-gold/30 rounded-2xl hover:border-gold transition-all text-left group cursor-pointer block">
           <div className="p-4 bg-gold/10 rounded-full group-hover:bg-gold/20 transition-colors">
             <FolderArchive className="w-8 h-8 text-gold" />
@@ -55,7 +54,7 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {projects.map((project) => (
-              <div key={project.id} className="p-5 bg-[#111] border border-gold/20 rounded-xl hover:border-gold/60 transition-colors cursor-pointer flex flex-col justify-between min-h-[160px]">
+              <Link href={`/project/${project.id}`} key={project.id} className="p-5 bg-[#111] border border-gold/20 rounded-xl hover:border-gold/60 transition-colors cursor-pointer flex flex-col justify-between min-h-[160px] block">
                 <div>
                   <h3 className="text-lg font-light text-gold mb-2">{project.name}</h3>
                   <p className="text-sm font-light text-gray-400 line-clamp-2">
@@ -68,7 +67,7 @@ export default async function Home() {
                   </span>
                   <span className="text-xs text-gold underline underline-offset-4 tracking-wider">Открыть</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
