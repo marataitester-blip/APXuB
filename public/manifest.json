@@ -1,0 +1,16 @@
+{
+  "name": "APXuB",
+  "short_name": "APXuB",
+  "description": "Библиотека проектов и генератор техпаспортов",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "https://lucide.dev/icons/folder-archive.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
