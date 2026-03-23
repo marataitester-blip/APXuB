@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getProjectById, generatePassportAction, deleteProject } from '../../actions';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import CopyButton from '../../components/CopyButton';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const project = await getProjectById(params.id);
@@ -22,7 +23,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
           <div>
             <div className="flex items-center gap-4">
               <h1 className="text-4xl md:text-5xl font-light text-gold tracking-wide">{project.name}</h1>
-              {/* Кнопка удаления */}
               <form action={deleteProject}>
                 <input type="hidden" name="projectId" value={project.id} />
                 <button type="submit" className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" title="Удалить проект">
@@ -57,24 +57,30 @@ export default async function ProjectPage({ params }: { params: { id: string } }
             Технический паспорт
           </h2>
           
-          {project.repoUrl && (
-            <form action={generatePassportAction}>
-              <input type="hidden" name="projectId" value={project.id} />
-              <button 
-                type="submit" 
-                className="flex items-center gap-2 text-sm text-[#0a0a0a] bg-gold px-4 py-2 rounded-lg font-medium hover:bg-gold-light transition-colors"
-              >
-                <Activity className="w-4 h-4" />
-                Обновить паспорт
-              </button>
-            </form>
-          )}
+          <div className="flex items-center gap-3">
+            {/* Кнопка копирования */}
+            {project.techPassport && (
+              <CopyButton text={project.techPassport} />
+            )}
+
+            {project.repoUrl && (
+              <form action={generatePassportAction}>
+                <input type="hidden" name="projectId" value={project.id} />
+                <button 
+                  type="submit" 
+                  className="flex items-center gap-2 text-sm text-[#0a0a0a] bg-gold px-4 py-2 rounded-lg font-medium hover:bg-gold-light transition-colors"
+                >
+                  <Activity className="w-4 h-4" />
+                  Обновить
+                </button>
+              </form>
+            )}
+          </div>
         </div>
 
         <div className="font-light text-gray-300 leading-relaxed">
           {project.techPassport ? (
             <div className="markdown-container space-y-4">
-              {/* Рендерим Markdown в нормальный HTML */}
               <ReactMarkdown
                 components={{
                   h1: ({node, ...props}) => <h1 className="text-2xl font-medium text-gold mt-6 mb-3" {...props} />,
