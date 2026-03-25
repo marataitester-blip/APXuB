@@ -5,13 +5,13 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import CopyButton from '../../components/CopyButton';
 import UpdateButton from '../../components/UpdateButton';
-import ButlerChat from '../../components/ButlerChat'; // <-- Импорт Дворецкого
+import ButlerChat from '../../components/ButlerChat';
 
-export default async function ProjectPage({ params }) {
+// ВОТ ЗДЕСЬ Я ВЕРНУЛ ТИПИЗАЦИЮ ДЛЯ PARAMS
+export default async function ProjectPage({ params }: { params: { id: string } }) {
   const project = await getProjectById(params.id);
   if (!project) notFound();
 
-  // Проверяем, есть ли у проекта карта файлов в базе
   const hasFileTree = project.fileTree && Array.isArray(project.fileTree) && project.fileTree.length > 0;
 
   return (
@@ -57,10 +57,8 @@ export default async function ProjectPage({ params }) {
         </div>
       </header>
 
-      {/* --- РАЗДЕЛЕНИЕ ЭКРАНА: 2 КОЛОНКИ --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        {/* ЛЕВАЯ КОЛОНКА: Техпаспорт (Занимает 2/3 экрана) */}
         <section className="lg:col-span-2 bg-[#111] border border-gold/20 rounded-2xl p-6 md:p-8">
           <div className="flex items-center justify-between border-b border-gold/10 pb-6 mb-6">
             <h2 className="text-2xl font-light text-gold flex items-center gap-3">
@@ -106,7 +104,6 @@ export default async function ProjectPage({ params }) {
           </div>
         </section>
 
-        {/* ПРАВАЯ КОЛОНКА: Дворецкий (Занимает 1/3 экрана, прилипает при скролле) */}
         <section className="lg:col-span-1 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">
           <ButlerChat projectId={project.id} hasFileTree={hasFileTree} />
         </section>
