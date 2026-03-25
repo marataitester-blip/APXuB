@@ -1,9 +1,10 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-export default function ButlerChat({ projectId, hasFileTree }) {
+// ВОТ ЗДЕСЬ МЫ УСПОКОИЛИ TYPESCRIPT: указали, что projectId - это строка (string)
+export default function ButlerChat({ projectId, hasFileTree }: { projectId: string, hasFileTree: boolean }) {
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
@@ -14,13 +15,14 @@ export default function ButlerChat({ projectId, hasFileTree }) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const sendMessage = async (e) => {
+  // ЗДЕСЬ ТОЖЕ ДОБАВИЛИ ТИП (React.FormEvent)
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -36,7 +38,7 @@ export default function ButlerChat({ projectId, hasFileTree }) {
         body: JSON.stringify({
           projectId,
           message: userMessage,
-          history: messages.slice(1) // Передаем историю без первого приветствия
+          history: messages.slice(1)
         })
       });
 
@@ -56,7 +58,6 @@ export default function ButlerChat({ projectId, hasFileTree }) {
 
   return (
     <div className="flex flex-col h-[600px] lg:h-full bg-[#0a0a0a] border border-gold/20 rounded-2xl overflow-hidden relative">
-      {/* Шапка чата */}
       <div className="p-4 border-b border-gold/10 bg-[#111] flex items-center gap-3 shrink-0">
         <div className="p-2 bg-gold/10 rounded-full">
           <Bot className="w-5 h-5 text-gold" />
@@ -67,7 +68,6 @@ export default function ButlerChat({ projectId, hasFileTree }) {
         </div>
       </div>
 
-      {/* Сообщения */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -111,7 +111,6 @@ export default function ButlerChat({ projectId, hasFileTree }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Поле ввода */}
       <div className="p-4 bg-[#111] border-t border-gold/10 shrink-0">
         <form onSubmit={sendMessage} className="relative flex items-center">
           <input 
