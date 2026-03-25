@@ -31,6 +31,12 @@ export async function scanRepoAndGeneratePassport(repoUrl: string) {
 
     const treeData = await treeRes.json();
 
+    // --- ЭВОЛЮЦИЯ: Сохраняем чистую структуру дерева для Дворецкого ---
+    // Очищаем от тяжелого мусора, оставляем только пути файлов
+    const cleanFileTree = treeData.tree
+      .filter((f: any) => f.type === 'blob' || f.type === 'tree')
+      .map((f: any) => ({ path: f.path, type: f.type }));
+
     const importantFiles = treeData.tree.filter((file: any) => {
       if (file.type !== 'blob') return false;
       const path = file.path;
@@ -74,7 +80,13 @@ export async function scanRepoAndGeneratePassport(repoUrl: string) {
     });
 
     const aiData = await aiRes.json();
-    return aiData.choices[0].message.content;
+    const passportText = aiData.choices[0].message.content;
+
+    // --- ИЗМЕНЕНИЕ: Возвращаем объект с паспортом И деревом файлов ---
+    return {
+      passportText,
+      fileTree: cleanFileTree
+    };
 
   } catch (error) {
     console.error("Ошибка сканирования:", error);
