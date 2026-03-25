@@ -15,5 +15,6 @@ model Project {
   appUrl       String?
   repoUrl      String?
   techPassport String?
+  fileTree     Json?    // <--- НОВОЕ ПОЛЕ: Кладовка для Дворецкого
   updatedAt    DateTime @updatedAt
 }
