@@ -29,7 +29,6 @@ export async function createProject(formData: FormData) {
   redirect('/');
 }
 
-// НОВАЯ ФУНКЦИЯ: Обновление проекта
 export async function updateProject(formData: FormData) {
   const id = formData.get('id') as string;
   const name = formData.get('name') as string;
@@ -53,11 +52,24 @@ export async function generatePassportAction(formData: FormData) {
   if (!projectId) return;
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project || !project.repoUrl) return;
+  
   try {
-    const generatedText = await scanRepoAndGeneratePassport(project.repoUrl);
-    await prisma.project.update({ where: { id: projectId }, data: { techPassport: generatedText } });
+    // Получаем двойной ответ (паспорт + дерево)
+    const result = await scanRepoAndGeneratePassport(project.repoUrl);
+    
+    // Записываем оба значения в базу
+    await prisma.project.update({ 
+      where: { id: projectId }, 
+      data: { 
+        techPassport: result.passportText,
+        fileTree: result.fileTree // Складываем дерево в кладовку
+      } 
+    });
+    
     revalidatePath(`/project/${projectId}`);
-  } catch (error) { console.error(error); }
+  } catch (error) { 
+    console.error(error); 
+  }
 }
 
 export async function deleteProject(formData: FormData) {
