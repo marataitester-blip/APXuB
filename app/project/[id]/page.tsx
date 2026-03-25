@@ -7,12 +7,11 @@ import CopyButton from '../../components/CopyButton';
 import UpdateButton from '../../components/UpdateButton';
 import ButlerChat from '../../components/ButlerChat';
 
-// ВОТ ЗДЕСЬ Я ВЕРНУЛ ТИПИЗАЦИЮ ДЛЯ PARAMS
 export default async function ProjectPage({ params }: { params: { id: string } }) {
   const project = await getProjectById(params.id);
   if (!project) notFound();
 
-  const hasFileTree = project.fileTree && Array.isArray(project.fileTree) && project.fileTree.length > 0;
+  const hasFileTree = Boolean(project.fileTree && Array.isArray(project.fileTree) && project.fileTree.length > 0);
 
   return (
     <main className="flex-1 p-6 md:p-12 max-w-[1400px] mx-auto w-full">
