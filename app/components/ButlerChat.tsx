@@ -3,13 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-// ВОТ ЗДЕСЬ МЫ УСПОКОИЛИ TYPESCRIPT: указали, что projectId - это строка (string)
 export default function ButlerChat({ projectId, hasFileTree }: { projectId: string, hasFileTree: boolean }) {
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
       content: hasFileTree 
-        ? 'Синьор, я изучил структуру файлов этого проекта. Что будем искать или вырезать?' 
+        ? 'Синьор, я изучил структуру файлов этого проекта. Готов выдавать прямые ссылки на код. Что ищем?' 
         : 'Синьор, у меня пока нет карты файлов этого проекта. Нажмите кнопку "Обновить" в Техпаспорте, чтобы я просканировал кладовку.'
     }
   ]);
@@ -17,11 +16,20 @@ export default function ButlerChat({ projectId, hasFileTree }: { projectId: stri
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Этот блок автоматически обновляет чат, когда сканирование (Обновить) завершается
+  useEffect(() => {
+    if (hasFileTree && messages.length === 1 && messages[0].content.includes('пока нет карты')) {
+      setMessages([{
+        role: 'assistant',
+        content: 'Синьор, сканирование завершено! Я вижу все файлы. Жду ваших указаний.'
+      }]);
+    }
+  }, [hasFileTree, messages]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // ЗДЕСЬ ТОЖЕ ДОБАВИЛИ ТИП (React.FormEvent)
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -88,7 +96,8 @@ export default function ButlerChat({ projectId, hasFileTree }: { projectId: stri
                   <ReactMarkdown
                     components={{
                       code: ({node, ...props}) => <code className="bg-black text-gold/80 px-1 py-0.5 rounded text-xs font-mono border border-gold/10" {...props} />,
-                      pre: ({node, ...props}) => <pre className="bg-black p-3 rounded-lg border border-gray-800 text-gray-300 overflow-x-auto text-xs my-2" {...props} />
+                      pre: ({node, ...props}) => <pre className="bg-black p-3 rounded-lg border border-gray-800 text-gray-300 overflow-x-auto text-xs my-2" {...props} />,
+                      a: ({node, ...props}) => <a className="text-gold hover:text-gold-light underline underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />
                     }}
                   >
                     {msg.content}
