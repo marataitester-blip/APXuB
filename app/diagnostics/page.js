@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Activity, Database, Layout, Server, AlertCircle, CheckCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Activity, Database, Layout, Server, AlertCircle, CheckCircle, Copy, Lightbulb } from 'lucide-react';
 
 // --- БАЗА ЗНАНИЙ СИМПТОМОВ ---
 const DIAGNOSTICS_DB = [
@@ -67,6 +67,27 @@ const DIAGNOSTICS_DB = [
         prompt: 'У меня сломалась верстка или вылезла ошибка гидратации (Hydration Mismatch). \n\nВот код компонента:\n[ВСТАВЬ КОД СЮДА]\n\nГде я допустил ошибку в тегах или состояниях?'
       }
     ]
+  },
+  {
+    category: 'Свободный запрос',
+    icon: Lightbulb,
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-900/20',
+    borderColor: 'border-purple-900/30',
+    issues: [
+      {
+        id: 'custom-bug',
+        title: 'Неизвестная ошибка / Другое',
+        action: 'Своими словами + все связанные файлы',
+        prompt: 'У меня возникла проблема, которая не подходит под стандартные категории.\n\n1. Суть проблемы (что я делаю и что идет не так):\n[ОПИШИ СВОИМИ СЛОВАМИ]\n\n2. Код связанного файла (или файлов):\n[ВСТАВЬ КОД СЮДА]\n\n3. Логи/Ошибки (если есть):\n[ВСТАВЬ ОШИБКУ ИЛИ НАПИШИ "ОШИБОК В ЛОГАХ НЕТ"]\n\nПроанализируй ситуацию и скажи, где искать причину.'
+      },
+      {
+        id: 'custom-feature',
+        title: 'Хотелка / Новая фича',
+        action: 'ТЗ своими словами + куда внедряем',
+        prompt: 'Я хочу добавить новый функционал в проект.\n\n1. Как это должно работать (идея / бизнес-логика):\n[ОПИШИ ИДЕЮ МАКСИМАЛЬНО ПОДРОБНО]\n\n2. Файл, куда будем это внедрять:\n[ВСТАВЬ ТЕКУЩИЙ КОД ФАЙЛА СЮДА]\n\nНапиши пошаговый план внедрения. Если для этой фичи нужно изменить базу данных — обязательно укажи это в первом шаге.'
+      }
+    ]
   }
 ];
 
@@ -110,7 +131,7 @@ export default function DiagnosticsPage() {
         <div className="lg:col-span-1 space-y-8">
           {DIAGNOSTICS_DB.map((category, idx) => (
             <div key={idx}>
-              <h3 className="text-sm font-semibold tracking-wider text-gray-500 uppercase mb-4 flex items-center gap-2">
+              <h3 className={`text-sm font-semibold tracking-wider uppercase mb-4 flex items-center gap-2 ${category.color}`}>
                 <category.icon className="w-4 h-4" />
                 {category.category}
               </h3>
@@ -121,7 +142,7 @@ export default function DiagnosticsPage() {
                     onClick={() => setSelectedIssue(issue)}
                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                       selectedIssue?.id === issue.id
-                        ? `bg-[#1a1a1a] border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]`
+                        ? `bg-[#1a1a1a] ${category.borderColor} shadow-[0_0_15px_rgba(255,255,255,0.05)]`
                         : `bg-[#111] border-gray-800 hover:border-gray-600`
                     }`}
                   >
@@ -136,24 +157,24 @@ export default function DiagnosticsPage() {
         {/* ПРАВАЯ КОЛОНКА: РЕШЕНИЕ И ПРОМПТ */}
         <div className="lg:col-span-2">
           {selectedIssue ? (
-            <div className="bg-[#111] border border-blue-900/30 rounded-2xl p-6 md:p-8 animate-fade-in">
+            <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 md:p-8 animate-fade-in relative overflow-hidden">
               
               <div className="flex items-start gap-4 mb-8 pb-8 border-b border-gray-800">
-                <div className="p-3 bg-red-900/20 text-red-400 rounded-full shrink-0 mt-1">
+                <div className="p-3 bg-gray-800/50 text-gray-300 rounded-full shrink-0 mt-1">
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-light text-gray-100 mb-2">{selectedIssue.title}</h2>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-900/20 text-blue-300 text-sm rounded-lg border border-blue-900/30">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-800 text-gray-300 text-sm rounded-lg border border-gray-700">
                     <CheckCircle className="w-4 h-4" />
-                    <strong>Требуется:</strong> {selectedIssue.action}
+                    <strong>Подготовьте:</strong> {selectedIssue.action}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-end">
-                  <h3 className="text-lg font-light text-blue-300">Сгенерированный промпт для ИИ:</h3>
+                  <h3 className="text-lg font-light text-gray-300">Промпт для ИИ:</h3>
                   <button
                     onClick={() => handleCopy(selectedIssue.prompt)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
@@ -164,14 +185,14 @@ export default function DiagnosticsPage() {
                 </div>
                 
                 <div className="relative">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/50 rounded-l-lg"></div>
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gray-600 rounded-l-lg"></div>
                   <pre className="bg-[#0a0a0a] p-6 rounded-lg border border-gray-800 text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed overflow-x-auto">
                     {selectedIssue.prompt}
                   </pre>
                 </div>
                 
                 <p className="text-sm text-gray-500 mt-4">
-                  * Скопируй этот текст, замени блоки [ВСТАВЬ КОД СЮДА] на свой реальный код, прикрепи нужные скриншоты и отправь в чат.
+                  * Скопируйте текст, замените блоки в квадратных скобках на свои данные и отправьте в чат.
                 </p>
               </div>
 
@@ -179,8 +200,8 @@ export default function DiagnosticsPage() {
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 border border-dashed border-gray-800 rounded-2xl text-gray-500 bg-[#0a0a0a]/50">
               <Activity className="w-12 h-12 text-gray-700 mb-4 opacity-50" />
-              <p className="text-lg font-light">Выберите проблему из списка слева,</p>
-              <p className="text-sm">чтобы получить инструкции и промпт для ИИ.</p>
+              <p className="text-lg font-light">Выберите пункт из списка слева,</p>
+              <p className="text-sm">чтобы получить готовый промпт для ИИ.</p>
             </div>
           )}
         </div>
