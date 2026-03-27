@@ -6,6 +6,7 @@ import { Copy, Check, Send } from 'lucide-react';
 
 interface ButlerChatProps {
     projectId: string;
+    hasFileTree?: boolean; // Добавлено, чтобы родительская страница не ругалась
 }
 
 interface Message {
@@ -13,7 +14,7 @@ interface Message {
     content: string;
 }
 
-export default function ButlerChat({ projectId }: ButlerChatProps) {
+export default function ButlerChat({ projectId, hasFileTree }: ButlerChatProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
