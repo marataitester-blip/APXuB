@@ -1,143 +1,186 @@
 'use client';
+
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import SendIcon from '../components/SendIcon'; // Убедитесь, что путь правильный
+import { experimental_useFormStatus as useFormStatus } from 'react-dom';
+import { Copy, Check } from 'lucide-react'; // Импортируем иконки для кнопки копирования
 
-export default function ButlerChat({ projectId, hasFileTree }: { projectId: string, hasFileTree: boolean }) {
-  const [messages, setMessages] = useState([
-    { 
-      role: 'assistant', 
-      content: hasFileTree 
-        ? 'Синьор, я изучил структуру файлов этого проекта. Готов выдавать прямые ссылки на код. Что ищем?' 
-        : 'Синьор, у меня пока нет карты файлов этого проекта. Нажмите кнопку "Обновить" в Техпаспорте, чтобы я просканировал кладовку.'
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+interface ButlerChatProps {
+    projectId: string;
+}
 
-  // Этот блок автоматически обновляет чат, когда сканирование (Обновить) завершается
-  useEffect(() => {
-    if (hasFileTree && messages.length === 1 && messages[0].content.includes('пока нет карты')) {
-      setMessages([{
-        role: 'assistant',
-        content: 'Синьор, сканирование завершено! Я вижу все файлы. Жду ваших указаний.'
-      }]);
-    }
-  }, [hasFileTree, messages]);
+interface Message {
+    role: 'user' | 'assistant';
+    content: string;
+}
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+export default function ButlerChat({ projectId }: ButlerChatProps) {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [input, setInput] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { pending } = useFormStatus();
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    // 1. Восстановление истории из localStorage при загрузке компонента
+    useEffect(() => {
+        const storageKey = `butler_chat_${projectId}`;
+        const savedChat = localStorage.getItem(storageKey);
+        if (savedChat) {
+            try {
+                setMessages(JSON.parse(savedChat));
+            } catch (error) {
+                console.error('Ошибка при чтении истории чата из памяти:', error);
+            }
+        }
+    }, [projectId]);
 
-    const userMessage = input;
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
+    // 2. Сохранение истории в localStorage при каждом новом сообщении
+    useEffect(() => {
+        const storageKey = `butler_chat_${projectId}`;
+        if (messages.length > 0) {
+            localStorage.setItem(storageKey, JSON.stringify(messages));
+        }
+    }, [messages, projectId]);
 
-    try {
-      const response = await fetch('/api/butler', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          message: userMessage,
-          history: messages.slice(1)
-        })
-      });
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
-      const data = await response.json();
-      
-      if (data.reply) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-      } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Простите, синьор, произошла ошибка связи с сервером.' }]);
-      }
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Критическая ошибка канала связи.' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    useEffect(scrollToBottom, [messages]);
 
-  return (
-    <div className="flex flex-col h-[600px] lg:h-full bg-[#0a0a0a] border border-gold/20 rounded-2xl overflow-hidden relative">
-      <div className="p-4 border-b border-gold/10 bg-[#111] flex items-center gap-3 shrink-0">
-        <div className="p-2 bg-gold/10 rounded-full">
-          <Bot className="w-5 h-5 text-gold" />
-        </div>
-        <div>
-          <h3 className="font-medium text-gold-light">Дворецкий</h3>
-          <p className="text-xs text-gray-500 font-light">Анализатор архитектуры</p>
-        </div>
-      </div>
+    // 3. Функция для копирования ответа Дворецкого в буфер обмена
+    const handleCopy = async (content: string, index: number) => {
+        try {
+            await navigator.clipboard.writeText(content);
+            setCopiedIndex(index);
+            // Возвращаем иконку обратно через 2 секунды
+            setTimeout(() => setCopiedIndex(null), 2000);
+        } catch (err) {
+            console.error('Не удалось скопировать текст: ', err);
+        }
+    };
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0 border border-gold/20">
-                <Bot className="w-4 h-4 text-gold" />
-              </div>
-            )}
-            <div className={`max-w-[85%] rounded-2xl p-4 text-sm font-light leading-relaxed ${
-              msg.role === 'user' 
-                ? 'bg-[#1a150b] border border-gold/30 text-[#e8d4a6] rounded-tr-none' 
-                : 'bg-[#111] border border-gray-800 text-gray-300 rounded-tl-none'
-            }`}>
-              {msg.role === 'user' ? (
-                msg.content
-              ) : (
-                <div className="markdown-container prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown
-                    components={{
-                      code: ({node, ...props}) => <code className="bg-black text-gold/80 px-1 py-0.5 rounded text-xs font-mono border border-gold/10" {...props} />,
-                      pre: ({node, ...props}) => <pre className="bg-black p-3 rounded-lg border border-gray-800 text-gray-300 overflow-x-auto text-xs my-2" {...props} />,
-                      a: ({node, ...props}) => <a className="text-gold hover:text-gold-light underline underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              )}
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (input.trim() === '' || isLoading) return;
+
+        const userMessage: Message = { role: 'user', content: input };
+        setMessages((prevMessages) => [...prevMessages, userMessage]);
+        setInput('');
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/butler', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ projectId, message: input, history: messages }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const botMessage: Message = { role: 'assistant', content: data.response };
+            setMessages((prevMessages) => [...prevMessages, botMessage]);
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { role: 'assistant', content: 'Извините, произошла ошибка при обработке вашего запроса. Возможно, пропала связь с сервером.' },
+            ]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Блокируем форму, если идет отправка (через useFormStatus или наш локальный стейт)
+    const isSubmitDisabled = pending || isLoading;
+
+    return (
+        <div className="flex flex-col h-full bg-gray-800 rounded-lg shadow-lg">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                {messages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-400">
+                            Задайте мне вопрос о проекте, и я постараюсь помочь.
+                        </p>
+                    </div>
+                ) : (
+                    messages.map((msg, index) => (
+                        <div
+                            key={index}
+                            className={`flex ${
+                                msg.role === 'user' ? 'justify-end' : 'justify-start'
+                            }`}
+                        >
+                            <div
+                                className={`max-w-[85%] p-4 rounded-xl ${
+                                    msg.role === 'user'
+                                        ? 'bg-blue-600 text-white rounded-br-none'
+                                        : 'bg-gray-700 text-gray-100 rounded-bl-none shadow-md'
+                                }`}
+                            >
+                                <ReactMarkdown className="markdown-content prose prose-invert max-w-none">
+                                    {msg.content}
+                                </ReactMarkdown>
+                                
+                                {/* Кнопка Копировать (только для ответов Дворецкого) */}
+                                {msg.role === 'assistant' && (
+                                    <div className="mt-3 pt-3 border-t border-gray-600 flex justify-end">
+                                        <button
+                                            onClick={() => handleCopy(msg.content, index)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-600 text-gray-300 rounded transition-colors text-xs border border-gray-600 focus:outline-none"
+                                        >
+                                            {copiedIndex === index ? (
+                                                <>
+                                                    <Check className="w-3.5 h-3.5 text-green-400" />
+                                                    <span className="text-green-400 font-medium tracking-wide">Скопировано</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                    <span className="tracking-wide">Копировать</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+                <div ref={messagesEndRef} />
             </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex gap-3 justify-start">
-             <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0 border border-gold/20">
-                <Bot className="w-4 h-4 text-gold" />
-              </div>
-              <div className="bg-[#111] border border-gray-800 rounded-2xl rounded-tl-none p-4 flex items-center">
-                <Loader2 className="w-4 h-4 text-gold animate-spin" />
-              </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="p-4 bg-[#111] border-t border-gold/10 shrink-0">
-        <form onSubmit={sendMessage} className="relative flex items-center">
-          <input 
-            type="text" 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Что ищем, синьор?..." 
-            className="w-full bg-[#0a0a0a] border border-gray-800 focus:border-gold/50 rounded-full pl-5 pr-12 py-3 outline-none text-gray-200 text-sm font-light transition-colors"
-          />
-          <button 
-            type="submit" 
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 p-2 text-gold hover:text-gold-light disabled:opacity-30 transition-colors bg-[#111] rounded-full"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+            <form onSubmit={handleSendMessage} className="flex p-4 border-t border-gray-700">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Спросите что-нибудь..."
+                    className="flex-1 p-3 rounded-l-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    disabled={isSubmitDisabled}
+                />
+                <button
+                    type="submit"
+                    className={`p-3 rounded-r-lg transition-colors duration-200 flex items-center justify-center ${
+                        isSubmitDisabled 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gold-500 text-gray-900 hover:bg-gold-600'
+                    }`}
+                    disabled={isSubmitDisabled}
+                >
+                    {isSubmitDisabled ? (
+                        <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-400 h-6 w-6 animate-spin border-t-blue-500"></div>
+                    ) : (
+                        <SendIcon className="w-5 h-5 text-current" />
+                    )}
+                </button>
+            </form>
+        </div>
+    );
 }
