@@ -2,9 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import SendIcon from '../components/SendIcon'; // Убедитесь, что путь правильный
 import { experimental_useFormStatus as useFormStatus } from 'react-dom';
-import { Copy, Check } from 'lucide-react'; // Импортируем иконки для кнопки копирования
+import { Copy, Check, Send } from 'lucide-react';
 
 interface ButlerChatProps {
     projectId: string;
@@ -177,7 +176,7 @@ export default function ButlerChat({ projectId }: ButlerChatProps) {
                     {isSubmitDisabled ? (
                         <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-400 h-6 w-6 animate-spin border-t-blue-500"></div>
                     ) : (
-                        <SendIcon className="w-5 h-5 text-current" />
+                        <Send className="w-5 h-5 text-current" />
                     )}
                 </button>
             </form>
