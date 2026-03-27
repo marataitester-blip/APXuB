@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { experimental_useFormStatus as useFormStatus } from 'react-dom';
 import { Copy, Check, Send } from 'lucide-react';
 
 interface ButlerChatProps {
@@ -20,7 +19,6 @@ export default function ButlerChat({ projectId }: ButlerChatProps) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { pending } = useFormStatus();
 
     // 1. Восстановление истории из localStorage при загрузке компонента
     useEffect(() => {
@@ -97,8 +95,7 @@ export default function ButlerChat({ projectId }: ButlerChatProps) {
         }
     };
 
-    // Блокируем форму, если идет отправка (через useFormStatus или наш локальный стейт)
-    const isSubmitDisabled = pending || isLoading;
+    const isSubmitDisabled = isLoading;
 
     return (
         <div className="flex flex-col h-full bg-gray-800 rounded-lg shadow-lg">
